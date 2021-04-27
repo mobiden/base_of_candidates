@@ -1,0 +1,25 @@
+{% extends 'db_base.html' %}
+{% load static %}
+{% block title %}Create of Project{% endblock %}
+
+{% block styles %}
+    <link rel="stylesheet" type="text/css" href="{% static "my_db_static/css/index.css" %}">
+{% endblock %}
+
+{% block content %}
+            <form method="post" enctype="multipart/form-data" action="{% url 'create_project' %}">
+            {% csrf_token %}
+            <div class="container">
+                     <div class="row">
+                <div class="col-8">
+                {{ form.as_ul}}
+            <input id="form-submit" type="submit" value="Send">
+                </div>
+                 <div class="col-4">
+                     <h3> {{ success }}
+                         </h3>
+                </div>
+                     </div>
+            </div>
+            </form>
+{% endblock %}

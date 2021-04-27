@@ -55,6 +55,7 @@ class Person(models.Model):
                             null=True,
                             blank=True,
                                 )
+    creating_date = models.DateTimeField( blank=True, null=True)
 
 
 class Project(models.Model):
@@ -76,6 +77,8 @@ class Project(models.Model):
     comments = models.TextField(blank=True,
                             null=True,
                                 )
+    creating_date = models.DateTimeField(blank=True, null=True)
+
 
 class Company(models.Model):
     company_name = models.CharField(max_length=45,
@@ -89,4 +92,6 @@ class Company(models.Model):
         null=True,
         blank=True,
     )
+    comments = models.TextField(null=True, blank=True)
 
+    creating_date = models.DateTimeField(blank=True, null=True)

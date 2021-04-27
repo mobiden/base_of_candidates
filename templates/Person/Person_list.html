@@ -1,0 +1,35 @@
+{% extends 'db_base.html' %}
+{% load static %}
+{% load concat_address %}
+{% block title %}List of Persons{% endblock %}
+
+{% block styles %}
+    <link rel="stylesheet" type="text/css" href="{% static "my_db_static/css/index.css" %}">
+{% endblock %}
+
+{% block content %}
+            <h2>Candidates</h2>
+            {% csrf_token %}
+            <div class="container">
+                     <div class="row">
+                <div class="col-8">
+
+                    <ul class="list-group">
+                       {% for person in object_list %}
+                        <li class="list-group-item">
+                            <a    href="{% url 'get_person' person.id  %}">
+                        {{ person.last_name }} {{ person.first_name }}  {{ person.current_company }}
+                        </a>
+                        </li>
+                       {% empty %}
+                        <li>Нет кандидатов</li>
+                       {% endfor %}
+                    </ul>
+
+
+                </div>
+
+                     </div>
+            </div>
+            </form>
+{% endblock %}

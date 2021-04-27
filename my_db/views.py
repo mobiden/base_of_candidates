@@ -1,73 +1,154 @@
+from datetime import datetime
+from django.contrib.auth.decorators import login_required
 from django.db import models
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render
 from django.views import View
 from django.views.decorators.csrf import csrf_exempt
+from django.views.generic import ListView
+
 from my_db.models import Person, Project, Company
 from django.db.models import Max, Count, Avg
-from .forms import create_personForm
+from .forms import create_personForm, create_companyForm, create_ProjectForm
+from .schemas import REVIEW_SCHEMA, ReviewSchema
+from jsonschema import validate
+from jsonschema.exceptions import ValidationError
+from marshmallow import ValidationError as MarError
+import json
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.views.generic.edit import CreateView
 
-
+@login_required
 def base(request):
     return render(request, 'my_db_views/db_base_main.html')
 
-class Create_person(View):
+class Create_person(LoginRequiredMixin, View):
+
     def get(self, request):
         form = create_personForm()
         return render(request, 'my_db_views/Person/create_person.html', {'form': form})
 
-    @csrf_exempt
     def post(self, request):
         form = create_personForm(request.POST)
         if form.is_valid():
-            form.cleaned_data
-            person = Person()
-            person.last_name = form.cleaned_data["last_name"]
-            person.first_name = form.cleaned_data["first_name"]
-            person.middle_name = form.cleaned_data["middle_name"]
-            person.mob_phone = form.cleaned_data["mob_phone"]
-            person.sec_phone = form.cleaned_data["sec_phone"]
-            person.e_mail = form.cleaned_data["e_mail"]
-            person.city = form.cleaned_data["city"]
-            person.messenger = form.cleaned_data["messenger"]
-            person.messenger_id = form.cleaned_data["messenger_id"]
-            person.current_company = form.cleaned_data["current_company"]
-            person.position = form.cleaned_data["position"]
-            person.comments = form.cleaned_data["comments"]
+            form.instance.creating_date = datetime.now()
+            form.clean()
             try:
-                person.save()
+                form.save()
             except:
                 return render(request, 'my_db_views/Person/create_person.html', {'form': form})
             else:
-                print('Done')
-            return render(request, 'my_db_views/db_base_main.html')
+                success = 'Кандидат внесен в базу'
+            return render(request, 'my_db_views/Person/create_person.html', {'form': form, 'success': success})
         else:
-            return render(request, 'my_db_views/Person/create_person.html', {'form': form})
+            success = 'Некорректные данные'
+            return render(request, 'my_db_views/Person/create_person.html', {'form': form, 'success': success})
+
+
+class List_of_persons(LoginRequiredMixin, ListView):
+    model = Person
+    def get_queryset(self):
+        if True:
+#        if self.request.user.is_superuser:
+            return Person.objects.values('last_name', 'first_name', 'current_company', 'id')
+
+    template_name = 'Person/Person_list.html'
+
+class Get_person(LoginRequiredMixin, View):
+
+    def get(self, request, pk):
+        person = Person.objects.get(pk = pk)
+        form = create_personForm(instance=person)
+        return render(request, 'my_db_views/Person/create_person.html', {'form': form})
+
+    def post(self, request):
+        form = create_personForm(request.POST)
+        if form.is_valid():
+            form.clean()
+            try:
+                form.save()
+            except:
+                return render(request, 'my_db_views/Person/create_person.html', {'form': form})
+            else:
+                success = 'Кандидат внесен в базу'
+            return render(request, 'my_db_views/Person/create_person.html', {'form': form, 'success': success})
+        else:
+            success = 'Некорректные данные'
+            return render(request, 'my_db_views/Person/create_person.html', {'form': form, 'success': success})
+
+
+class Create_company(LoginRequiredMixin, CreateView):
+    model = Company
+    fields = [
+        'company_name',
+        'city',
+        'phone',
+    ]
+    template_name = 'Company/company_form.html'
+
+    def form_valid(self, form):
+        form.instance.creating_date = datetime.now()
+        return super().form_valid(form)
+
+    success_url = '/db/'
+
+"""
+    def get(self, request):
+        form = create_companyForm()
+        return render(request, 'my_db_views/Company/create_company.html', {'form': form})
+
+
+    def post(self, request):
+        form = create_companyForm(request.POST)
+        if form.is_valid():
+            form.clean()
+            try:
+                form.save()
+            except:
+                success = 'Данные не сохранены'
+                return render(request, 'my_db_views/Company/create_company.html', {'form': form, 'success': success})
+
+            success = 'Компания внесена'
+            return render(request, 'my_db_views/Company/create_company.html', {'form': form, 'success': success})
+        else:
+            success = "Некорректные данные"
+            return render(request, 'my_db_views/Company/create_company.html', {'form': form, 'success': success})
+"""
+
+class List_of_companies(LoginRequiredMixin, ListView):
+    model = Company
+    def get_queryset(self):
+        if True:
+#        if self.request.user.is_superuser:
+            return Company.objects.values('company_name', 'city', 'phone', 'id')
+
+    template_name = 'Person/Person_list.html'
+
+class Create_project(LoginRequiredMixin, View):
+    def get(self, request):
+        form = create_ProjectForm()
+        return render(request, 'my_db_views/Project/create_project.html', {'form': form})
+
+
+    def post(self, request):
+        form = create_ProjectForm(request.POST)
+        if form.is_valid():
+            form.clean()
+            try:
+                form.save()
+            except:
+                success = 'Данные не сохранены'
+                return render(request, 'my_db_views/Project/create_project.html', {'form': form, 'success': success})
+
+            success = 'Компания внесена'
+            return render(request, 'my_db_views/Project/create_project.html', {'form': form, 'success': success})
+        else:
+            success = "Некорректные данные"
+            return render(request, 'my_db_views/Project/create_project.html', {'form': form, 'success': success})
 
 
 
-def create_company(request):
-    company = Company()
-    company.company_name = input('Название компании: ')
-    company.city = input('Город: ')
-    company.phone = input('Телефон: ')
-    if company.phone == '':
-        company.phone = None
-    company.save()
-    que = input('Еще? ')
-    if que.lower() == 'y':
-        create_company(request)
-    return HttpResponse('Ok')
 
-def create_project(request):
-    project = Project()
-    project.project_name = input('Название проекта: ')
-    project.vacancy = input('Название вакансии: ')
-    client = input('Заказчик: ')
-    client = Company.objects.get(pk = client)
-    project.client = client
-    project.save()
-    return HttpResponse('Ok')
 
 def add_candidate(request):
     project = Project.objects.get(pk = 2)
@@ -77,21 +158,10 @@ def add_candidate(request):
     project.save()
     return HttpResponse('Ok')
 
-def edit_person(request):
-    cand = input('Фамилия, Имя: ').split()
-    cand = Person.objects.get(last_name=cand[0], first_name=cand[1])
-    l_name = input("Введите новую фамилию: ")
-    if l_name != '':
-        cand.last_name = l_name
-    f_name = input("Введите новое имя: ")
-    if f_name != '':
-        cand.first_name = f_name
-    cand.save()
-    return HttpResponse('Ok')
 
-def get_list_of_persons(request):
-    lists = Person.objects.all()
-    return HttpResponse(lists.values('last_name', 'first_name', 'mob_phone'))
+
+
+
 
 def get_list_of_person_with_filter(request):
     query = input('что ищем? ')
@@ -121,3 +191,29 @@ def count_person_in_project(request):
 
 def topic_details(request, pk):
     return render(request, 'my_db_views/topic_details.html')
+
+
+class SchemaView(View):
+    def post(self, request):
+        try:
+            document = json.loads(request.body)
+            validate(document, REVIEW_SCHEMA)
+            return JsonResponse (document, status=201)
+        except json.JSONDecodeError:
+            return JsonResponse({'errors': "Invalid JSON"}, status=400)
+        except ValidationError as exc:
+            return JsonResponse({'errors': exc.message}, status=400)
+
+
+
+class MarshView(View):
+    def post(self, request):
+        try:
+            document = json.load(request.body)
+            schema = ReviewSchema(strict=True)
+            data = schema(document)
+            return JsonResponse (data.data, status=201)
+        except json.JSONDecodeError:
+            return JsonResponse({'errors': "Invalid JSON"}, status=400)
+        except MarError as exc:
+            return JsonResponse({'errors': exc.message}, status=400)
