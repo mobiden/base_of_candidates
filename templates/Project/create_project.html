@@ -11,13 +11,24 @@
             {% csrf_token %}
             <div class="container">
                      <div class="row">
-                <div class="col-8">
+                <div class="col-4">
                 {{ form.as_ul}}
             <input id="form-submit" type="submit" value="Send">
                 </div>
-                 <div class="col-4">
-                     <h3> {{ success }}
-                         </h3>
+                 <div class="col-8">
+                     <h3> {{ success }} </h3>
+                      <ul class="list-group">
+                       {% for pInp in pr_p %}
+                        <li class="list-group-item">
+                         <a    href="{% url 'get_person' pInp.people_id  %}">
+                      {{ pInp.people_id }} : {{ pInp.status }} - {{ pInp.comments }}
+                        </a>
+                        </li>
+                       {% empty %}
+                        <li>Нет кандидатов</li>
+                       {% endfor %}
+                    </ul>
+
                 </div>
                      </div>
             </div>

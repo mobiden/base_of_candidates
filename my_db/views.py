@@ -7,7 +7,7 @@ from django.views import View
 from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import ListView
 
-from my_db.models import Person, Project, Company
+from my_db.models import Person, Project, Company, Projects_People
 from django.db.models import Max, Count, Avg
 from .forms import create_personForm, create_companyForm, create_ProjectForm
 from .schemas import REVIEW_SCHEMA, ReviewSchema
@@ -26,7 +26,7 @@ class Create_person(LoginRequiredMixin, View):
 
     def get(self, request):
         form = create_personForm()
-        return render(request, 'my_db_views/Person/create_person.html', {'form': form})
+        return render(request, 'Person/create_person.html', {'form': form})
 
     def post(self, request):
         form = create_personForm(request.POST)
@@ -36,13 +36,13 @@ class Create_person(LoginRequiredMixin, View):
             try:
                 form.save()
             except:
-                return render(request, 'my_db_views/Person/create_person.html', {'form': form})
+                return render(request, 'Person/create_person.html', {'form': form})
             else:
                 success = 'Кандидат внесен в базу'
-            return render(request, 'my_db_views/Person/create_person.html', {'form': form, 'success': success})
+            return render(request, 'Person/create_person.html', {'form': form, 'success': success})
         else:
             success = 'Некорректные данные'
-            return render(request, 'my_db_views/Person/create_person.html', {'form': form, 'success': success})
+            return render(request, 'Person/create_person.html', {'form': form, 'success': success})
 
 
 class List_of_persons(LoginRequiredMixin, ListView):
@@ -59,7 +59,7 @@ class Get_person(LoginRequiredMixin, View):
     def get(self, request, pk):
         person = Person.objects.get(pk = pk)
         form = create_personForm(instance=person)
-        return render(request, 'my_db_views/Person/create_person.html', {'form': form})
+        return render(request, 'Person/create_person.html', {'form': form})
 
     def post(self, request):
         form = create_personForm(request.POST)
@@ -68,13 +68,13 @@ class Get_person(LoginRequiredMixin, View):
             try:
                 form.save()
             except:
-                return render(request, 'my_db_views/Person/create_person.html', {'form': form})
+                return render(request, 'Person/create_person.html', {'form': form})
             else:
                 success = 'Кандидат внесен в базу'
-            return render(request, 'my_db_views/Person/create_person.html', {'form': form, 'success': success})
+            return render(request, 'Person/create_person.html', {'form': form, 'success': success})
         else:
             success = 'Некорректные данные'
-            return render(request, 'my_db_views/Person/create_person.html', {'form': form, 'success': success})
+            return render(request, 'Person/create_person.html', {'form': form, 'success': success})
 
 
 class Create_company(LoginRequiredMixin, CreateView):
@@ -83,6 +83,9 @@ class Create_company(LoginRequiredMixin, CreateView):
         'company_name',
         'city',
         'phone',
+        'comments',
+        'id'
+
     ]
     template_name = 'Company/company_form.html'
 
@@ -92,11 +95,25 @@ class Create_company(LoginRequiredMixin, CreateView):
 
     success_url = '/db/'
 
-"""
-    def get(self, request):
-        form = create_companyForm()
-        return render(request, 'my_db_views/Company/create_company.html', {'form': form})
 
+
+class List_of_companies(LoginRequiredMixin, ListView):
+    model = Company
+    def get_queryset(self):
+        if True:
+#        if self.request.user.is_superuser:
+
+            return Company.objects.values('company_name', 'city', 'phone', 'comments', 'id')
+
+    template_name = 'Company/company_list.html'
+
+
+class Get_company(LoginRequiredMixin, View):
+
+    def get(self, request, pk):
+        company = Company.objects.get(pk= pk)
+        form = create_companyForm(instance=company)
+        return render(request, 'Company/create_company.html', {'form': form})
 
     def post(self, request):
         form = create_companyForm(request.POST)
@@ -105,29 +122,18 @@ class Create_company(LoginRequiredMixin, CreateView):
             try:
                 form.save()
             except:
-                success = 'Данные не сохранены'
-                return render(request, 'my_db_views/Company/create_company.html', {'form': form, 'success': success})
-
-            success = 'Компания внесена'
-            return render(request, 'my_db_views/Company/create_company.html', {'form': form, 'success': success})
+                return render(request, 'Company/create_company.html', {'form': form})
+            else:
+                success = 'Change of company successfully saved '
         else:
-            success = "Некорректные данные"
-            return render(request, 'my_db_views/Company/create_company.html', {'form': form, 'success': success})
-"""
+            success = 'Incorrect data'
+        return render(request, 'Company/create_company.html', {'form': form, 'success': success})
 
-class List_of_companies(LoginRequiredMixin, ListView):
-    model = Company
-    def get_queryset(self):
-        if True:
-#        if self.request.user.is_superuser:
-            return Company.objects.values('company_name', 'city', 'phone', 'id')
-
-    template_name = 'Person/Person_list.html'
 
 class Create_project(LoginRequiredMixin, View):
     def get(self, request):
         form = create_ProjectForm()
-        return render(request, 'my_db_views/Project/create_project.html', {'form': form})
+        return render(request, 'Project/create_project.html', {'form': form})
 
 
     def post(self, request):
@@ -138,16 +144,52 @@ class Create_project(LoginRequiredMixin, View):
                 form.save()
             except:
                 success = 'Данные не сохранены'
-                return render(request, 'my_db_views/Project/create_project.html', {'form': form, 'success': success})
+                return render(request, 'Project/create_project.html', {'form': form, 'success': success})
 
             success = 'Компания внесена'
-            return render(request, 'my_db_views/Project/create_project.html', {'form': form, 'success': success})
+            return render(request, 'Project/edit_project.html', {'form': form, 'success': success})
         else:
             success = "Некорректные данные"
-            return render(request, 'my_db_views/Project/create_project.html', {'form': form, 'success': success})
+            return render(request, 'Project/create_project.html', {'form': form, 'success': success})
 
 
+class List_of_projects(LoginRequiredMixin, ListView):
+    model = Project
 
+    def get_queryset(self):
+        if True:
+#        if self.request.user.is_superuser:
+            return Project.objects.values()
+
+    template_name = 'Project/project_list.html'
+
+
+class Get_project(LoginRequiredMixin, View):
+
+    def get(self, request, pk):
+        project = Project.objects.get(pk= pk)
+        form = create_ProjectForm(instance=project)
+        project_people = Projects_People.objects.filter(project_id= pk)
+
+        return render(request, 'Project/create_project.html',
+                      {'form': form, 'pr_p':project_people})
+
+    def post(self, request):
+        form = create_ProjectForm(request.POST)
+        if form.is_valid():
+            form.clean()
+            try:
+                form.save()
+            except:
+                return render(request, 'Project/create_project.html', {'form': form})
+            else:
+                success = 'Change of project successfully saved '
+        else:
+            success = 'Incorrect data'
+        return render(request, 'Project/create_project.html', {'form': form, 'success': success})
+
+class Add_person_to_project(LoginRequiredMixin, ListView):
+    pass
 
 
 def add_candidate(request):
@@ -163,10 +205,7 @@ def add_candidate(request):
 
 
 
-def get_list_of_person_with_filter(request):
-    query = input('что ищем? ')
-    lists = Project.objects.filter(persons__last_name__contains=query)
-    return HttpResponse(lists.values('vacancy', 'comments')[:1])
+
 
 def get_persons_of_project(request):
     lists = Project.objects.get(pk = 1)

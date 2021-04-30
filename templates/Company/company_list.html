@@ -1,0 +1,35 @@
+{% extends 'db_base.html' %}
+{% load static %}
+{% load concat_address %}
+{% block title %}List of Companies{% endblock %}
+
+{% block styles %}
+    <link rel="stylesheet" type="text/css" href="{% static "my_db_static/css/index.css" %}">
+{% endblock %}
+
+{% block content %}
+            <h2>Companies</h2>
+            {% csrf_token %}
+            <div class="container">
+                     <div class="row">
+                <div class="col-8">
+
+                    <ul class="list-group">
+                       {% for company in object_list %}
+                        <li class="list-group-item">
+                         <a    href="{% url 'get_company' company.id  %}">
+                      {{ company.id }}  {{ company.company_name }} {{ company.city }} {{ company.comments }}
+                        </a>
+                        </li>
+                       {% empty %}
+                        <li>Нет компаний</li>
+                       {% endfor %}
+                    </ul>
+
+
+                </div>
+
+                     </div>
+            </div>
+            </form>
+{% endblock %}
