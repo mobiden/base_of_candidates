@@ -16,4 +16,4 @@ class create_companyForm(forms.ModelForm):
 class create_ProjectForm(forms.ModelForm):
     class Meta:
         model = Project
-        exclude = ['creating_date']
+        exclude = ['creating_date', 'pr_people']

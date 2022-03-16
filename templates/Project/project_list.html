@@ -15,15 +15,19 @@
                 <div class="col-8">
 
                     <ul class="list-group">
+                        {% block urls %}
                        {% for project in object_list %}
                         <li class="list-group-item">
+
                          <a    href="{% url 'get_project' project.id  %}">
+
                       {{ project.id }}{{ project.client }} : {{ project.vacancy }} - {{ project.creating_date }}
                         </a>
                         </li>
                        {% empty %}
                         <li>Нет компаний</li>
                        {% endfor %}
+                                 {% endblock %}
                     </ul>
 
 

@@ -18,7 +18,7 @@
                        {% for person in object_list %}
                         <li class="list-group-item">
                             <a    href="{% url 'get_person' person.id  %}">
-                        {{ person.last_name }} {{ person.first_name }}  {{ person.current_company }}
+                       {{ person.id }} {{ person.last_name }} {{ person.first_name }}  {{ person.current_company }}
                         </a>
                         </li>
                        {% empty %}

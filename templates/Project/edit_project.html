@@ -1,6 +1,6 @@
 {% extends 'db_base.html' %}
 {% load static %}
-{% block title %}Create of Project{% endblock %}
+{% block title %}Edit of Project{% endblock %}
 
 {% block styles %}
     <link rel="stylesheet" type="text/css" href="{% static "my_db_static/css/index.css" %}">
@@ -15,13 +15,14 @@
                 {{ form.as_ul}}
             <input id="form-submit" type="submit" value="Send">
                 </div>
-                 <div class="col-8">
+                 <div class="col-4">
+
                      <h3> {{ success }} </h3>
-                      <ul class="list-group">
-                       {% for pInp in pr_p %}
+                     <ul class="list-group">
+                       {% for personInp in pr_p %}
                         <li class="list-group-item">
-                         <a    href="{% url 'get_person' pInp.people_id  %}">
-                      {{ pInp.people_id }} : {{ pInp.status }} - {{ pInp.comments }}
+                         <a    href="{% url 'get_person' personInp.id  %}">
+                      {{ personInp.id }} : {{ personInp.last_name }}   {{ personInp.first_name }}
                         </a>
                         </li>
                        {% empty %}

@@ -12,8 +12,19 @@
             <div class="container">
                      <div class="row">
                 <div class="col-4">
-                {{ form.as_ul}}
+                {{ form.as_ul }}
+            {% block to_add  %}
             <input id="form-submit" type="submit" value="Send">
+            {% endblock %}
+                </div>
+
+                  <div class="col-4">
+                <h4>{{ success }}</h4>
+            {% block features %}
+
+            {% endblock %}
+
+
                 </div>
                      </div>
             </div>

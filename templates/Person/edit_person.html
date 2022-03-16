@@ -1,0 +1,12 @@
+{% extends 'Person/create_person.html' %}
+{% load static %}
+
+{% block title %}Edit of Person{% endblock %}
+{% block to_add  %}
+    <a href="#"> Edit</a>
+ {% endblock %}
+
+{% block features %}
+
+   <a  type="button" class="btn btn-success" href="{% url 'add_person_to_p' id %}">Add to project</a>
+{% endblock %}

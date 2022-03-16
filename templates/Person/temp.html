@@ -1,0 +1,15 @@
+{% block urls %}
+    {% for project in projects %}
+          <li class="list-group-item">
+
+        <form method="POST" action="
+{% url 'add_person_to_p' pk=person_pk  %}"
+       input type="radio" name="pr_id" value="{{ project.id }}">
+            {{ project.project_name }} {{ project.client }}
+        </form>
+    </li>
+     {% empty %}
+     <li>Нет проектов</li>
+     {% endfor %}
+<p><input type="submit"></p>
+{% endblock %}

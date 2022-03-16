@@ -1,10 +1,12 @@
+import base64
+import os
+
 from django.db import models
 
 class Company(models.Model):
     company_name = models.CharField(max_length=60,
                                     null=False,
-                                    unique=True,
-
+                                    unique=True
                                     )
     city = models.CharField(max_length=45,
                             null=True,
@@ -87,7 +89,14 @@ class Person(models.Model):
                             null=True,
                             blank=True,
                                 )
-    creating_date = models.DateTimeField( blank=True, null=True)
+    pers_photo = models.ManyToManyField('Photo',
+                                        related_name='to_pers_photo',
+                                        blank=True,
+                                        )
+    creating_date = models.DateTimeField(blank=True,
+                                         null=True,
+                                         auto_now_add=True,
+                                         )
 
 
 
@@ -109,6 +118,11 @@ class Project(models.Model):
                                     null=True,
                                on_delete=models.SET_NULL,
                               )
+    pr_people = models.ManyToManyField('Person',
+                                       through="Projects_people",
+                                       through_fields=('project', 'people')
+                                       )
+
     comments = models.TextField(blank=True,
                             null=True,
                                 )
@@ -116,12 +130,21 @@ class Project(models.Model):
 
     file = models.FileField
 
-class Projects_People(models.Model):
+
+    def __str__(self):
+        return self.project_name
+
+
+
+
+class Projects_people(models.Model):
     project = models.ForeignKey('Project',
                                 on_delete=models.CASCADE,
                                 related_name='long_list_project',)
+
     people = models.ForeignKey('Person', on_delete=models.CASCADE,
-                               related_name='long_list_persons')
+                               related_name='long_list_persons',
+                               )
 
     comments = models.TextField(blank=True, null=True)
 
@@ -141,3 +164,45 @@ class Projects_People(models.Model):
                               null=True,
                             )
 
+    creating_date = models.DateTimeField(blank=True, null=True, )
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['project', 'people'], name='one_person_in_pr')
+        ]
+
+class Photo(models.Model):
+    the_photo = models.ImageField('Фото',
+                                  upload_to='img/',
+                                  null=True,
+                                  blank=True,
+                                  )
+    photo_file = models.BinaryField(max_length=6000000,
+                                    blank=True,
+                                    null=True,
+                                    help_text='Максимум 5 мегабайт',
+                                    )
+
+    creating_date = models.DateTimeField(blank=True,
+                                         null=True,
+                                         auto_now_add=True,
+                                         )
+    def __str__(self):
+        return self.the_photo.path
+
+    def save(self, *args, **kwargs):
+        if self.the_photo:
+            self.photo_file = self.the_photo.file.read()
+        super().save(*args, **kwargs)  # Call the "real" save() method.
+
+    @classmethod
+    def from_db(cls, db, field_names, values):
+        instance = super().from_db(db, field_names, values)
+        ph_file = instance.the_photo
+        if not os.path.exists(ph_file.path) and instance.photo_file:
+            with open('temp21111111', 'wb') as ph:
+                enfile = base64.b64encode(instance.photo_file)
+                ph.write(base64.b64decode(enfile))
+                ph.close()
+                os.rename('temp21111111', ph_file.path)
+        return instance

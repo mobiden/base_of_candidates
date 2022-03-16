@@ -79,16 +79,30 @@ DATABASES = {
  #   'default': {
  #       'ENGINE': 'django.db.backends.sqlite3',
  #       'NAME': BASE_DIR / 'db.sqlite3',
-'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'my_projects_db',
-        'USER': 'root',
-        'PASSWORD': 'mysqlqwe72V%ZrqQ',
-        'HOST': 'localhost',   # Or an IP Address that your DB is hosted on
-        'PORT': '3306',
-        'default-character-set':'utf8'
 
+#'default': {
+#        'ENGINE': 'django.db.backends.mysql',
+#        'NAME': 'my_projects_db',
+#        'USER': 'root',
+#        'PASSWORD': 'mysqlqwe72V%ZrqQ',
+#        'HOST': 'localhost',   # Or an IP Address that your DB is hosted on
+#        'PORT': '3306',
+#        'default-character-set':'utf8'
+#    }
+
+'default': {
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'NAME': 'my_project_work',
+        'USER' : 'Superuser',
+        'PASSWORD' : 'Fv1pCoFx',
+        'HOST' : 'localhost',
+        'PORT' : '5432',
+        'default-character-set': 'utf8'
     }
+
+
+
+
 }
 
 

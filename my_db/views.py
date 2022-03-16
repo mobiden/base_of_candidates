@@ -2,12 +2,13 @@ from datetime import datetime
 from django.contrib.auth.decorators import login_required
 from django.db import models
 from django.http import HttpResponse, JsonResponse
-from django.shortcuts import render
+from django.shortcuts import render, redirect
+from django.utils.decorators import method_decorator
 from django.views import View
 from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import ListView
 
-from my_db.models import Person, Project, Company, Projects_People
+from my_db.models import Person, Project, Company, Projects_people
 from django.db.models import Max, Count, Avg
 from .forms import create_personForm, create_companyForm, create_ProjectForm
 from .schemas import REVIEW_SCHEMA, ReviewSchema
@@ -17,6 +18,7 @@ from marshmallow import ValidationError as MarError
 import json
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic.edit import CreateView
+
 
 @login_required
 def base(request):
@@ -39,19 +41,21 @@ class Create_person(LoginRequiredMixin, View):
                 return render(request, 'Person/create_person.html', {'form': form})
             else:
                 success = 'Кандидат внесен в базу'
-            return render(request, 'Person/create_person.html', {'form': form, 'success': success})
         else:
             success = 'Некорректные данные'
-            return render(request, 'Person/create_person.html', {'form': form, 'success': success})
+            render(request, 'Person/create_person.html', {
+                'form': form, 'success': success })
+        return render(request, 'Person/edit_person.html', {
+                'form': form, 'success': success, })
 
 
 class List_of_persons(LoginRequiredMixin, ListView):
     model = Person
     def get_queryset(self):
+
         if True:
 #        if self.request.user.is_superuser:
-            return Person.objects.values('last_name', 'first_name', 'current_company', 'id')
-
+            return Person.objects.get_queryset()
     template_name = 'Person/Person_list.html'
 
 class Get_person(LoginRequiredMixin, View):
@@ -59,11 +63,13 @@ class Get_person(LoginRequiredMixin, View):
     def get(self, request, pk):
         person = Person.objects.get(pk = pk)
         form = create_personForm(instance=person)
-        return render(request, 'Person/create_person.html', {'form': form})
+        to_add = True
+        return render(request, 'Person/edit_person.html', {'form': form, 'id': int(pk)})
 
     def post(self, request):
         form = create_personForm(request.POST)
         if form.is_valid():
+            form.instance.creating_date = datetime.now()
             form.clean()
             try:
                 form.save()
@@ -71,7 +77,7 @@ class Get_person(LoginRequiredMixin, View):
                 return render(request, 'Person/create_person.html', {'form': form})
             else:
                 success = 'Кандидат внесен в базу'
-            return render(request, 'Person/create_person.html', {'form': form, 'success': success})
+            return render(request, 'Person/edit_person.html', {'form': form, 'success': success})
         else:
             success = 'Некорректные данные'
             return render(request, 'Person/create_person.html', {'form': form, 'success': success})
@@ -146,7 +152,7 @@ class Create_project(LoginRequiredMixin, View):
                 success = 'Данные не сохранены'
                 return render(request, 'Project/create_project.html', {'form': form, 'success': success})
 
-            success = 'Компания внесена'
+            success = 'Проект внесен'
             return render(request, 'Project/edit_project.html', {'form': form, 'success': success})
         else:
             success = "Некорректные данные"
@@ -159,20 +165,20 @@ class List_of_projects(LoginRequiredMixin, ListView):
     def get_queryset(self):
         if True:
 #        if self.request.user.is_superuser:
-            return Project.objects.values()
+            return Project.objects.get_queryset()
 
     template_name = 'Project/project_list.html'
 
 
 class Get_project(LoginRequiredMixin, View):
-
     def get(self, request, pk):
         project = Project.objects.get(pk= pk)
         form = create_ProjectForm(instance=project)
-        project_people = Projects_People.objects.filter(project_id= pk)
 
-        return render(request, 'Project/create_project.html',
-                      {'form': form, 'pr_p':project_people})
+        project_people = Person.objects.filter(long_list_persons__project_id=pk)
+        project_people2 = project.pr_people.all()
+        return render(request, 'Project/edit_project.html',
+                      {'form': form, 'pr_p': project_people2})
 
     def post(self, request):
         form = create_ProjectForm(request.POST)
@@ -188,28 +194,39 @@ class Get_project(LoginRequiredMixin, View):
             success = 'Incorrect data'
         return render(request, 'Project/create_project.html', {'form': form, 'success': success})
 
+
 class Add_person_to_project(LoginRequiredMixin, ListView):
-    pass
+
+    def get(self, request, pk):
+        #       from pdb import set_trace; set_trace()
+        projects = Project.objects.all()
+        return render(request, 'Project/project_list_for_added.html', context={
+        'projects':projects, 'person_pk':pk,
+         })
 
 
-def add_candidate(request):
-    project = Project.objects.get(pk = 2)
-    cand = input("Фамилия, Имя? ").split()
-    candidate = Person.objects.get(last_name=cand[0], first_name=cand[1])
-    project.persons.add(candidate)
-    project.save()
-    return HttpResponse('Ok')
+    def post(self, request, pk):
+        pr_id = request.POST.get("pr_id")
+        project_people = Projects_people()
+        project_people.project = Project.objects.get(pk = pr_id)
+        project_people.people = Person.objects.get(pk = pk)
+
+
+
+        try:
+            project_people.save()
+            print ('added')
+        except:
+            success = 'Данные не сохранены'
+            return redirect('first_page')
+
+        success = 'Candidate successfuly added'
+        return redirect('first_page')
+ #       return HttpResponse('Candidate successfuly added')
 
 
 
 
-
-
-
-
-def get_persons_of_project(request):
-    lists = Project.objects.get(pk = 1)
-    return HttpResponse(lists.persons.all().values('last_name', 'first_name'))
 
 def get_sum_of_persons_in_project(request):
     lists = Project.objects.get(pk=2).persons.count()
@@ -227,10 +244,6 @@ def count_person_in_project(request):
 # annotation
     q = Project.objects.annotate(Count('persons')).filter(project_name__contains='омме')
     return render(request, 'my_db_views/index.html')
-
-def topic_details(request, pk):
-    return render(request, 'my_db_views/topic_details.html')
-
 
 class SchemaView(View):
     def post(self, request):

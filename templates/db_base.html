@@ -4,10 +4,12 @@
 <head>
     <meta charset="UTF-8">
     <title>{% block title %}{% endblock %}</title>
+
     <link rel="stylesheet" type="text/css" href="{% static "bootstrap/css/bootstrap.min.css"%}">
     {% block styles %}{% endblock %}
     <script type="text/javascript" src="{% static "jquery/jquery-3.6.0.min.js"%}"></script>
     <script type="text/javascript" src="{% static "bootstrap/js/bootstrap.bundle.min.js"%}"></script>
+
     {% block scripts %} {% endblock %}
 </head>
 <body>
@@ -59,7 +61,7 @@
             <li><a class="dropdown-item" href="{% url 'create_person' %}">Create person</a></li>
             <li><a class="dropdown-item" href="{% url 'get_list_persons' %}">List of persons</a></li>
             <li><hr class="dropdown-divider"></li>
-            <li><a class="dropdown-item" href="{% url 'add_person' %}">Add candidate to project</a></li>
+            <li><a class="dropdown-item" href="#">Add candidate to project</a></li>
           </ul>
         </li>
         <li class="nav-item">
@@ -75,6 +77,6 @@
 </nav>
     {% endblock %}
     {% block content %}{% endblock %}
-    {% block message %}{% endblock %}
+    {% block message %}{{ success }}{% endblock %}
 </body>
 </html>
