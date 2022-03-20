@@ -1,0 +1,46 @@
+{% extends 'db_base.html' %}
+{% load static %}
+
+{% block title %}Person information{% endblock %}
+{% block content %}
+
+            {% csrf_token %}
+            <div class="container">
+                     <div class="row">
+
+                <div class="col-4">
+
+           <h1>{{ cur_person.last_name }}</h1>
+           <h2>{{ cur_person.first_name }}</h2>
+           {%  if cur_person.middle_name %}
+                    <h2>{{ cur_person.middle_name }}</h2>
+           {% endif %}
+
+           {%  if cur_person.mob_phone %}
+                <h4>Моб.: {{ cur_person.mob_phone }}</h4>
+                {% endif %}
+           {% if cur_person.e_mail %}
+                <h4>E-mail: {{ cur_person.e_mail }}</h4>
+                {% endif %}
+
+
+
+
+
+               </div>
+
+
+                 <div class="col-4">
+                 {% if cur_person.mainPhoto.url %}
+    <img src= "{{cur_person.mainPhoto.url}}" height="200" width="300" class="figure-img img-fluid rounded" alt="фото">
+            {% endif %}
+                <p>  {{ cur_person.comment }}</p>
+                </div>
+
+                      <div class="col-4">
+
+                     </div>
+            </div>
+            </div>
+
+{% endblock content %}

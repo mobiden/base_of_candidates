@@ -17,9 +17,12 @@
                     <ul class="list-group">
                        {% for person in object_list %}
                         <li class="list-group-item">
-                            <a    href="{% url 'get_person' person.id  %}">
-                       {{ person.id }} {{ person.last_name }} {{ person.first_name }}  {{ person.current_company }}
-                        </a>
+                            <a    href="{% url 'detail_person' person.id  %}">
+                       {{ person.id }} {{ person.last_name }} {{ person.first_name }} </a>
+                       {%  if person.current_company %}
+                        {{ person.current_company }}
+                        {% endif %}
+
                         </li>
                        {% empty %}
                         <li>Нет кандидатов</li>

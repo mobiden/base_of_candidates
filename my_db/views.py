@@ -1,53 +1,89 @@
 from datetime import datetime
 from django.contrib.auth.decorators import login_required
 from django.db import models
-from django.http import HttpResponse, JsonResponse
+from django.http import HttpResponse, JsonResponse, Http404
 from django.shortcuts import render, redirect
-from django.utils.decorators import method_decorator
+from django.urls import reverse
 from django.views import View
-from django.views.decorators.csrf import csrf_exempt
+
 from django.views.generic import ListView
 
 from my_db.models import Person, Project, Company, Projects_people
 from django.db.models import Max, Count, Avg
-from .forms import create_personForm, create_companyForm, create_ProjectForm
+from .forms import create_companyForm, create_ProjectForm
 from .schemas import REVIEW_SCHEMA, ReviewSchema
 from jsonschema import validate
 from jsonschema.exceptions import ValidationError
 from marshmallow import ValidationError as MarError
 import json
-from django.contrib.auth.mixins import LoginRequiredMixin
-from django.views.generic.edit import CreateView
+from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
+from django.views.generic.edit import CreateView, UpdateView
 
 
 @login_required
 def base(request):
-    return render(request, 'my_db_views/db_base_main.html')
+    return render(request, 'my_db_views/../templates/db_base_main.html')
 
-class Create_person(LoginRequiredMixin, View):
 
-    def get(self, request):
-        form = create_personForm()
-        return render(request, 'Person/create_person.html', {'form': form})
+class Create_person(LoginRequiredMixin, CreateView):
+ #       permission_required = 'my_db.can_edit'
+ #       permission_denied_message = 'доступ запрещен'
+        model = Person
+        fields = [
+            'last_name',
+            'first_name',
+            'middle_name',
+            'mob_phone',
+            'sec_phone',
+            'e_mail',
+            'city',
+            'messenger',
+            'messenger_id',
+            'current_company',
+            'position',
+            'comments',
+            'resume',
+            'mainPhoto',
+        ]
+        template_name =  'Person/create_person.html'
+ # TODO: add validation
 
-    def post(self, request):
-        form = create_personForm(request.POST)
-        if form.is_valid():
-            form.instance.creating_date = datetime.now()
-            form.clean()
-            try:
-                form.save()
-            except:
-                return render(request, 'Person/create_person.html', {'form': form})
-            else:
-                success = 'Кандидат внесен в базу'
-        else:
-            success = 'Некорректные данные'
-            render(request, 'Person/create_person.html', {
-                'form': form, 'success': success })
-        return render(request, 'Person/edit_person.html', {
-                'form': form, 'success': success, })
+ #   def post(self, request):
+ #       form = create_personForm(request.POST)
+ #       if form.is_valid():
+#            form.instance.creating_date = datetime.now()
+ #           form.clean()
+ #           try:
+ #               data = form.save()
+ #           except:
+ #               return render(request, 'Person/create_person.html', {'form': form})
+ #           else:
+ #               success = 'Кандидат внесен в базу'
+ #       else:
+ #           success = 'Некорректные данные'
+ #           render(request, 'Person/create_person.html', {
+ #               'form': form, 'success': success })
+ #       pk = data.id
+ #       return reverse('detail_person', kwargs={"pk": pk})
 
+
+
+        def get_success_url(self):
+            pk = self.object.id
+            return reverse('detail_person', kwargs={"pk": pk})
+
+
+@login_required
+def detail_person (request, pk):
+    try:
+        cur_person = Person.objects.get(pk = pk)
+
+    except Person.DoesNotExist:
+        raise Http404
+
+    return render(request, "Person/detail_person.html", context={
+        'cur_person': cur_person,
+            })
 
 class List_of_persons(LoginRequiredMixin, ListView):
     model = Person
@@ -58,29 +94,45 @@ class List_of_persons(LoginRequiredMixin, ListView):
             return Person.objects.get_queryset()
     template_name = 'Person/Person_list.html'
 
-class Get_person(LoginRequiredMixin, View):
+class Change_person(LoginRequiredMixin, UpdateView):
+    permission_required = 'Gen_tree.can_edit'
+    permission_denied_message = 'доступ запрещен'
+    model = Person
+    fields = [
+        'id',
+        'last_name',
+        'first_name',
+        'middle_name',
+        'mob_phone',
+        'sec_phone',
+        'e_mail',
+        'city',
+        'messenger',
+        'messenger_id',
+        'current_company',
+        'position',
+        'comments',
+        'resume',
+        'mainPhoto',
+    ]
+    template_name = 'Person/edit_of_person.html'
 
-    def get(self, request, pk):
-        person = Person.objects.get(pk = pk)
-        form = create_personForm(instance=person)
-        to_add = True
-        return render(request, 'Person/edit_person.html', {'form': form, 'id': int(pk)})
+    def get_success_url(self):
+        pk = self.kwargs["pk"]
+        return reverse('detailed_person', kwargs={"pk": pk})
 
-    def post(self, request):
-        form = create_personForm(request.POST)
-        if form.is_valid():
-            form.instance.creating_date = datetime.now()
-            form.clean()
-            try:
-                form.save()
-            except:
-                return render(request, 'Person/create_person.html', {'form': form})
-            else:
-                success = 'Кандидат внесен в базу'
-            return render(request, 'Person/edit_person.html', {'form': form, 'success': success})
-        else:
-            success = 'Некорректные данные'
-            return render(request, 'Person/create_person.html', {'form': form, 'success': success})
+
+#            form.clean()
+#            try:
+#                form.save()
+#            except:
+#                return render(request, 'Person/create_person.html', {'form': form})
+#            else:
+#               success = 'Кандидат внесен в базу'
+#            return render(request, 'Person/edit_person.html', {'form': form, 'success': success})
+#        else:
+#            success = 'Некорректные данные'
+#            return render(request, 'Person/create_person.html', {'form': form, 'success': success})
 
 
 class Create_company(LoginRequiredMixin, CreateView):
@@ -96,7 +148,7 @@ class Create_company(LoginRequiredMixin, CreateView):
     template_name = 'Company/company_form.html'
 
     def form_valid(self, form):
-        form.instance.creating_date = datetime.now()
+#        form.instance.creating_date = datetime.now()
         return super().form_valid(form)
 
     success_url = '/db/'
@@ -140,7 +192,6 @@ class Create_project(LoginRequiredMixin, View):
     def get(self, request):
         form = create_ProjectForm()
         return render(request, 'Project/create_project.html', {'form': form})
-
 
     def post(self, request):
         form = create_ProjectForm(request.POST)
